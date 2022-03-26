@@ -1,0 +1,11 @@
+ENTRY(_ROM_HEADER)
+
+__text_start = DEFINED (__gba_multiboot) ? 0x2000000 : 0x8000000;
+
+__sp_usr          = 0x3007F00;
+__sp_irq          = 0x3007FA0;
+
+SECTIONS
+{
+  .text __text_start : {}
+}
