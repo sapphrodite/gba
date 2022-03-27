@@ -15,7 +15,7 @@ int main() {
 
     sprite_palette::at(10) = color(31, 16, 0);
 
-    while(~button_states::get(button::RIGHT)) {}
+    while(!button_states::get(button::RIGHT)) {}
 
     return 0;
 }

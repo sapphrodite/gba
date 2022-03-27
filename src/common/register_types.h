@@ -2,23 +2,15 @@
 #define REGISTER_TYPES_H
 
 #include "integral_types.h"
-
-// The standard functions for this aren't available, somehow?
-consteval int ctz(int value) {
-    int counter = 0;
-    while ((value & ~(1 << counter)) == value) {
-        counter++;
-    }
-    return counter;
-}
+#include <bit>
 
 template <uintptr_t address, typename register_datatype, register_datatype bitmask>
 class register_base {
 public:
-    static constinit inline volatile register_datatype* memory = reinterpret_cast<volatile register_datatype*>(address + 1);
-    const static u8 shift_amount = ctz(bitmask);
+    static constinit inline volatile register_datatype* const memory = reinterpret_cast<volatile register_datatype*>(address);
+    static constexpr u8 shift_amount = std::countr_zero(bitmask);
 
-    static_assert(((address % sizeof(register_datatype)) == 0), "Input is improperly aligned");
+    static_assert((address % sizeof(register_datatype) == 0), "Input is improperly aligned");
 };
 
 template <uintptr_t address, typename register_datatype, register_datatype bitmask, bool readable, bool writable, typename access_type = register_datatype>
@@ -48,12 +40,12 @@ class bitfield_register {
 public:
     static void clear(access_type index) {
         static_assert(writable, "Cannot write to this register");
-        base::memory &= _bitmask(index);
+        *base::memory = *base::memory & ~_bitmask(index);
     };
 
     static void set(access_type index) {
         static_assert(writable, "Cannot write to this register");
-        *base::memory |= _bitmask(index);
+        *base::memory = *base::memory | _bitmask(index);
     };
 
     static bool get(access_type index) {
