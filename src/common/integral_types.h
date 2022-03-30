@@ -17,4 +17,7 @@ using i64 = int64_t;
 using f32 = float;
 using f64 = double;
 
+template <typename T>
+constexpr static size_t bitmask(T index) { return size_t{1} << (size_t)index; }
+
 #endif //INTEGRAL_TYPES_H
