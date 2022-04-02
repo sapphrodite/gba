@@ -5,65 +5,77 @@
 #include <bit>
 
 
-template <uintptr_t address, typename register_datatype>
+
+namespace mmio_functions {
+    template <typename T>
+    static void clear_int(T* const memory, unsigned owned_bits) {
+        *memory = *memory & ~owned_bits;
+    };
+
+    template <typename T>
+    static void set_int(T* const memory, unsigned owned_bits, unsigned value) {
+        *memory = (*memory & ~owned_bits) | (value << std::countr_zero(owned_bits));
+    };
+}
+
+
+template <uintptr_t address, typename datatype_in, bool readable_in = true, bool writable_in = true>
 class mmio {
 public:
-    static constinit inline volatile register_datatype* const memory = reinterpret_cast<volatile register_datatype*>(address);
-    static_assert((address % sizeof(register_datatype) == 0), "Input is improperly aligned");
+    using datatype = datatype_in;
+
+    static constexpr inline bool writable = writable_in;
+    static constexpr inline bool readable = readable_in;
+    static constinit inline volatile datatype* const memory = reinterpret_cast<volatile datatype*>(address);
+    static_assert((address % sizeof(datatype) == 0), "Input is improperly aligned");
 };
 
-template <uintptr_t address, typename register_datatype, register_datatype bitmask>
-class register_base : public mmio<address, register_datatype> {
-public:
-    static constexpr u8 shift_amount = std::countr_zero(bitmask);
-};
 
-template <uintptr_t address, typename register_datatype, register_datatype bitmask, bool readable, bool writable, typename access_type = register_datatype>
+template <typename mmio, typename mmio::datatype owned_bits, typename access_type = typename mmio::datatype>
 class integer_register {
 public:
     static void clear() {
-        static_assert(writable, "Cannot write to this register");
-        *base::memory = *base::memory & bitmask;
+        static_assert(mmio::writable, "Cannot write to this register");
+        mmio_functions::clear_int(mmio::memory, owned_bits);
     };
 
-    static void write(access_type value) {
-        static_assert(writable, "Cannot write to this register");
-        clear();
-        *base::memory = *base::memory | (register_datatype)value << base::shift_amount;
+    static void set(access_type value) {
+        static_assert(mmio::writable, "Cannot write to this register");
+        mmio_functions::set_int(mmio::memory, owned_bits, (unsigned) value);
     };
 
-    static access_type read() {
-        static_assert(readable, "Cannot read from this register");
-        return (access_type)((*base::memory & bitmask) >> base::shift_amount);
+    static access_type get() {
+        static_assert(mmio::readable, "Cannot read from this register");
+        return (access_type)((*mmio::memory & owned_bits) >> shift_amount);
     };
 private:
-    using base = register_base<address, register_datatype, bitmask>;
+    static constexpr unsigned shift_amount = std::countr_zero(owned_bits);
 };
 
-template <uintptr_t address, typename register_datatype, register_datatype controlled_bits, bool readable, bool writable, typename access_type = register_datatype>
+template <typename mmio, typename mmio::datatype owned_bits, typename access_type = typename mmio::datatype>
 class bitfield_register {
 public:
     static bool get(access_type index) {
-        static_assert(readable, "Cannot read from this register");
-        return (*base::memory & _bitmask(index)) == _bitmask(index);
+        static_assert(mmio::readable, "Cannot read from this register");
+        return (*mmio::memory & _bitmask(index)) == _bitmask(index);
     };
 
     template <typename... Args>
     static void set(Args... args) {
-        static_assert(readable, "Cannot write to this register");
-        *base::memory = *base::memory | (... | _bitmask(args));
+        static_assert(mmio::readable, "Cannot write to this register");
+        *mmio::memory = *mmio::memory | (... | _bitmask(args));
     };
 
     template <typename... Args>
     static void clear(access_type index, Args... args) {
-        static_assert(readable, "Cannot write to this register");
-        *base::memory = *base::memory & ~(... | _bitmask(args));
+        static_assert(mmio::readable, "Cannot write to this register");
+        *mmio::memory = *mmio::memory & ~(... | _bitmask(args));
     };
 private:
-    constexpr static register_datatype _bitmask(access_type index) {
-        return 1 << (register_datatype) index << base::shift_amount;
+    constexpr static typename mmio::datatype _bitmask(access_type index) {
+        return 1 << (typename mmio::datatype) index << std::countr_zero(owned_bits);
     }
-    using base = register_base<address, register_datatype, controlled_bits>;
 };
+
 
 #endif //REGISTER_TYPES_H

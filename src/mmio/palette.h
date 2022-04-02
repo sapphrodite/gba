@@ -1,30 +1,25 @@
 #ifndef PALETTE_H
 #define PALETTE_H
 
-#include <common/integral_types.h>
+#include <common/mmio_array.h>
 
 class color {
 public:
-    constexpr color(u8 r, u8 g, u8 b) { _data = (b << 10) | (g << 5) | r; }
+    constexpr color(u8 r, u8 g, u8 b) { _data = to_rgb16(r, g, b); }
     constexpr color(u16 value) { _data = value; }
-    constexpr u16 rgb() { return _data; }
-    u8 r() const { return (_data & 0b11111); }
-    u8 g() const { return (_data & (0b11111 << 5)) >> 5; }
-    u8 b() const { return (_data & (0b11111 << 10)) >> 10; }
+
+    constexpr void set(u8 r, u8 g, u8 b) volatile { _data = to_rgb16(r, g, b); }
+    constexpr void set(u16 data) volatile { _data = data; }
+
+    u8 r() volatile { return (_data & 0b11111); }
+    u8 g() volatile { return (_data & (0b11111 << 5)) >> 5; }
+    u8 b() volatile { return (_data & (0b11111 << 10)) >> 10; }
 private:
-    u16 _data = 0;
+    constexpr static u16 to_rgb16(u8 r, u8 g, u8 b) { return (b << 10) | (g << 5) | r; }
+    u16 _data;
 };
 
-template <uintptr_t address>
-class palette {
-public:
-    static constexpr void set(size_t index, color c) { _impl::memory[index] = c.rgb(); }
-    static constexpr color get(size_t index) { return color(_impl::memory[index]); }
-private:
-    using _impl = mmio<address, u16>;
-};
-
-using background_palette = palette<0x05000000>;
-using sprite_palette = palette<0x05000200>;
+using background_palette = mmio_array<mmio<0x05000000, u8>, color>;
+using sprite_palette = mmio_array<mmio<0x05000200, u8>, color>;
 
 #endif //PALETTE_H

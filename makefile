@@ -10,7 +10,7 @@ OBJECTS := $(patsubst $(SOURCE_DIR)%, $(BUILD_DIR)/%.o, $(SOURCES))
 DEPFILES := $(patsubst %.o,%.d,$(OBJECTS))
 
 INCLUDE_FLAGS := -Isrc/
-CXXFLAGS = --std=c++20 -mcpu=arm7tdmi -nostartfiles -fno-exceptions -mthumb-interwork -mthumb -nodefaultlibs -O3 -Wall -Wextra
+CXXFLAGS = --std=c++20 -nostartfiles -fno-exceptions -mthumb-interwork -mthumb -nodefaultlibs -O3 -Wall -Wextra
 LDFLAGS = -T lnkscript $(CXXFLAGS)
 
 -include $(DEPFILES)
@@ -19,7 +19,7 @@ $(BUILD_DIR)/%.o: $(SOURCE_PATH)% $(THIS_MAKEFILE)
 	@mkdir -p "$(dir $@)"
 	@echo "[CXX] $@"
 	arm-none-eabi-g++ $(LDFLAGS_REQ) $(CXXFLAGS) $(INCLUDE_FLAGS) -MMD -MP -c "$<" -o "$@"
-	
+
 $(TARGET_NAME): $(OBJECTS) lnkscript
 	@echo "[LD] $(TARGET_NAME)"
 	arm-none-eabi-gcc $(OBJECTS) $(LDFLAGS) -o $(TARGET_NAME)

@@ -11,9 +11,10 @@ enum class button {
 };
 
 struct button_states {
+    using KEYINPUT = mmio<0x04000130, u16, true, false>;
     static bool get(button b) { return !_impl::get(b); }
 private:
-    using _impl = bitfield_register<0x04000130, u16, 0x3FF, true, false, button>;
+    using _impl = bitfield_register<KEYINPUT, 0x3FF, button>;
 };
 
 #endif //BUTTONS_H
