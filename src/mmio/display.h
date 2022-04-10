@@ -15,6 +15,9 @@ public:
         OBJ
     };
 
+    using force_blank = integer_register<DISPCNT, 0x80, bool>;
+    using hblank_draw = integer_register<DISPCNT, 0x20, bool>;
+
     using active_layers = bitfield_register<DISPCNT, 0x1F00, layer>;
     using bg_mode = integer_register<DISPCNT, 0x7>;
 

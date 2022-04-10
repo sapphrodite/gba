@@ -20,6 +20,9 @@ public:
         mmio_functions::set_int(&_attrib_0, _obj_size_bitmask, size >> 2);
         mmio_functions::set_int(&_attrib_1, _obj_size_bitmask, size & 0x3);
     }
+    void disable() volatile {
+        mmio_functions::set_int(&_attrib_0, 0x300, 0b10);
+    }
     //void set_mapmode()
 private:
     u16 _attrib_0;
