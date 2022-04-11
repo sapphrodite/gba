@@ -1,30 +1,35 @@
+#include <cstdint>
+
 #include "common/integral_types.h"
 #include "common/register_types.h"
-
 #include "mmio/display.h"
 #include "mmio/palette.h"
 #include "mmio/buttons.h"
 #include "mmio/object.h"
 
-extern "C" const std::byte _binary_bun_tex_start[];
-extern "C" const std::byte _binary_bun_pal_start[];
+extern "C" const u16 bun_tex[];
+extern "C" const u16 bun_pal[];
+
+extern "C" const size_t bun_pal_size;
+extern "C" const size_t bun_tex_size;
 
 int main() {
     auto& obj1 = objects::get(0);
     obj1.set_position(53, 69);
     obj1.set_size(object_size::_16x16);
+
     for (int i = 1; i < 128; i++) {
         objects::get(i).disable();
     }
 
-    u16* bun_pal = (u16*) _binary_bun_pal_start;
-    for (int i = 0; i < 7; i++) {
+    int pal_size = reinterpret_cast<std::uintptr_t>(&bun_pal_size) / sizeof(u16);
+    for (int i = 0; i < pal_size; i++) {
         sprite_palette::get(i).set(bun_pal[i]);
     }
 
+    int tex_size = reinterpret_cast<std::uintptr_t>(&bun_tex_size) / sizeof(u16);
     volatile u16* foo = (u16*)0x06010000;
-    u16* bun_tex = (u16*) _binary_bun_tex_start;
-    for (int i = 0; i < 128; i++) {
+    for (int i = 0; i < tex_size; i++) {
         foo[i] = bun_tex[i];
     }
 
