@@ -38,9 +38,9 @@ $(BUILD_DIR)/%.o: $(SOURCE_PATH)%.cpp $(THIS_MAKEFILE)
 
 $(TARGET_NAME): $(OBJECTS) $(TEXTURES) lnkscript src/init.s
 	@echo "[LD] $(notdir $@)"
-	$(CXX) $(OBJECTS) $(TEXTURES) src/init.s $(LDFLAGS) -o $(TARGET_NAME)
-	@echo "Stripping and formatting ROM"
-	$(OBJCOPY) -O binary $(TARGET_NAME)
+	$(CXX) src/init.s $(OBJECTS) $(TEXTURES) $(LDFLAGS) -o $(TARGET_NAME)
+	#@echo "Stripping and formatting ROM"
+	#$(OBJCOPY) -O binary $(TARGET_NAME)
 
 $(CONVERTER): tools/png2gbatiles.cpp
 	echo "[TOOL] $(CONVERTER)"

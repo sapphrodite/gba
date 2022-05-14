@@ -6,6 +6,7 @@
 #include "mmio/palette.h"
 #include "mmio/buttons.h"
 #include "mmio/object.h"
+#include "mmio/dma.h"
 
 extern "C" const u16 bun_tex[];
 extern "C" const u16 bun_pal[];
@@ -27,11 +28,7 @@ int main() {
         sprite_palette::get(i).set(bun_pal[i]);
     }
 
-    int tex_size = reinterpret_cast<std::uintptr_t>(&bun_tex_size) / sizeof(u16);
-    volatile u16* foo = (u16*)0x06010000;
-    for (int i = 0; i < tex_size; i++) {
-        foo[i] = bun_tex[i];
-    }
+    dma<1, u16>::write((u16*) 0x06010000, bun_tex, bun_tex_size, 0);
 
     display::bg_mode::set(0);
     display::force_blank::set(false);
