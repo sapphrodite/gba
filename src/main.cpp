@@ -7,6 +7,7 @@
 #include "mmio/buttons.h"
 #include "mmio/object.h"
 #include "mmio/dma.h"
+#include "vram/vram.h"
 
 extern "C" const u16 bun_tex[];
 extern "C" const u16 bun_pal[];
@@ -28,7 +29,7 @@ int main() {
         sprite_palette::get(i).set(bun_pal[i]);
     }
 
-    dma<1, u16>::write((u16*) 0x06010000, bun_tex, bun_tex_size, 0);
+    dma<1, u16>::write(vram::obj_tile_addr<u16>(0), bun_tex, bun_tex_size, 0);
 
     display::bg_mode::set(0);
     display::force_blank::set(false);
